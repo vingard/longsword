@@ -11,6 +11,10 @@ function SWEP:Reload()
 
 	self:SetReloading( true )
 	self:SetReloadTime( CurTime() + self.Owner:GetViewModel():SequenceDuration() )
+
+	if self.ReloadSound then
+		self:EmitSound(self.ReloadSound)
+	end
 end
 
 function SWEP:InsertShell()
@@ -21,6 +25,10 @@ function SWEP:InsertShell()
 	self:QueueIdle()
 
 	self:SetReloadTime( CurTime() + self.Owner:GetViewModel():SequenceDuration() )
+
+	if self.ReloadShellSound then
+		self:EmitSound(self.ReloadShellSound)
+	end
 end
 
 function SWEP:ReloadThink()

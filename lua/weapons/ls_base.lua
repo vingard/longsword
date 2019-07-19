@@ -114,6 +114,10 @@ function SWEP:ShootBullet(damage, num_bullets, aimcone)
 		bullet.TracerName = self.Primary.Tracer
 	end
 
+	if self.Primary.Range then
+		bullet.Distance = self.Primary.Range
+	end
+
 	bullet.Tracer	= 1 -- Show a tracer on every x bullets
 	bullet.Force	= 1 -- Amount of force to give to phys objects
 	bullet.Damage	= damage
@@ -132,18 +136,26 @@ function SWEP:ShootEffects()
 	else
 		self:SetIronsightsRecoil( math.Clamp( 7.5 * (self.IronsightsRecoilVisualMultiplier or 1) * self.Primary.Recoil, 0, 10 ) )
 
-		local vm = self.Owner:GetViewModel()
-		local attachment = vm:LookupAttachment("muzzle")
-		local posang = vm:GetAttachment(attachment)
+		if CLIENT then
+			local isThirdperson = hook.Run("ShouldDrawLocalPlayer", self.Owner)
 
-		if posang then
-			local ef = EffectData()
-			ef:SetFlags(0)
-			ef:SetEntity(self.Owner:GetViewModel())
-			ef:SetAttachment(1)
-			ef:SetScale(1)
+			if not isThirdperson then
+				local vm = self.Owner:GetViewModel()
+				local attachment = vm:LookupAttachment("muzzle")
+				local posang = vm:GetAttachment(attachment)
 
-			util.Effect("CS_MuzzleFlash", ef)
+				if posang then
+					local ef = EffectData()
+					ef:SetOrigin(self.Owner:GetShootPos())
+					ef:SetStart(self.Owner:GetShootPos())
+					ef:SetNormal(self.Owner:EyeAngles():Forward())
+					ef:SetEntity(self.Owner:GetViewModel())
+					ef:SetAttachment(attachment)
+					ef:SetScale(self.IronsightsMuzzleFlashScale or 1)
+
+					util.Effect(self.IronsightsMuzzleFlash or "CS_MuzzleFlash", ef)
+				end
+			end
 		end
 	end
 
