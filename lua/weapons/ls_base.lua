@@ -52,10 +52,6 @@ SWEP.IronsightsSensitivity = 0.8
 SWEP.IronsightsCrosshair = false
 SWEP.UseIronsightsRecoil = true
 
-function RPM(rpm)
-	return 60 / rpm
-end
-
 function SWEP:SetupDataTables()
 	self:NetworkVar("Bool", 0, "Ironsights")
 	self:NetworkVar("Bool", 1, "Reloading")
@@ -99,13 +95,35 @@ function SWEP:Deploy()
 	return true
 end
 
+function SWEP:ShootBullet(damage, num_bullets, aimcone)
+	local bullet = {}
+
+	bullet.Num 	= num_bullets
+	bullet.Src 	= self.Owner:GetShootPos() -- Source
+	bullet.Dir 	= self.Owner:GetAimVector() -- Dir of bullet
+	bullet.Spread 	= Vector(aimcone, aimcone, 0)	-- Aim Cone
+
+	if self.Primary.Tracer then
+		bullet.TracerName = self.Primary.Tracer
+	end
+
+	bullet.Tracer	= 1 -- Show a tracer on every x bullets
+	bullet.Force	= 1 -- Amount of force to give to phys objects
+	bullet.Damage	= damage
+	bullet.AmmoType = ""
+
+	self.Owner:FireBullets(bullet)
+
+	self:ShootEffects()
+end
+
 function SWEP:ShootEffects()
 	if not self:GetIronsights() or not self.UseIronsightsRecoil then
 		--self:SendWeaponAnim( self:Clip1() > 0 and ACT_VM_PRIMARYATTACK or ACT_VM_DRYFIRE )
 		self:PlayAnim(ACT_VM_PRIMARYATTACK)
 		self:QueueIdle()
 	else
-		self:SetIronsightsRecoil( math.Clamp( 7.5 * self.Primary.Recoil, 0, 10 ) )
+		self:SetIronsightsRecoil( math.Clamp( 7.5 * (self.IronsightsRecoilVisualMultiplier or 1) * self.Primary.Recoil, 0, 10 ) )
 
 		local vm = self.Owner:GetViewModel()
 		local attachment = vm:LookupAttachment("muzzle")
