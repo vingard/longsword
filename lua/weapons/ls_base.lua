@@ -79,6 +79,12 @@ function SWEP:Initialize()
 	self:SetHoldType(self.HoldType)
 end
 
+function SWEP:OnReloaded()
+	timer.Simple(0, function()
+		self:SetHoldType(self.HoldType)
+	end)
+end
+
 function SWEP:PlayAnim(act)
 	local vmodel = self.Owner:GetViewModel()
 	local seq = vmodel:SelectWeightedSequence(act)
@@ -102,7 +108,8 @@ function SWEP:ShootEffects()
 		self:SetIronsightsRecoil( math.Clamp( 7.5 * self.Primary.Recoil, 0, 10 ) )
 
 		local vm = self.Owner:GetViewModel()
-		local posang = vm:GetAttachment( 1 )
+		local attachment = vm:LookupAttachment("muzzle")
+		local posang = vm:GetAttachment(attachment)
 
 		if posang then
 			local ef = EffectData()
