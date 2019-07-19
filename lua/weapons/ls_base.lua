@@ -9,8 +9,6 @@ SWEP.DrawWeaponInfoBox = false
 SWEP.Spawnable = false
 SWEP.AdminOnly = false
 
-SWEP.WorldModel = Model("models/weapons/w_pistol.mdl")
-SWEP.ViewModel = Model("models/weapons/cstrike/c_pist_p228.mdl")
 SWEP.ViewModelFOV = 55
 SWEP.UseHands = true
 
@@ -19,7 +17,7 @@ SWEP.SlotPos = 1
 
 SWEP.CSMuzzleFlashes = true
 
-SWEP.Primary.Sound = Sound("Weapon_P228.Single")
+SWEP.Primary.Sound = Sound("Weapon_Pistol.Single")
 SWEP.Primary.Recoil = 0.8
 SWEP.Primary.Damage = 5
 SWEP.Primary.NumShots = 1
@@ -378,7 +376,7 @@ function SWEP:PreDrawViewModel()
 	self:OffsetThink()
 end
 
-local sway= 1.5
+local sway = 1.5
 local lastAng = Angle(0, 0, 0)
 local cacheAng = Angle(0, 0, 0)
 
@@ -446,9 +444,13 @@ function SWEP:GetViewModelPosition( pos, ang )
 		local ft8 = math.min(ft * 8, 1)
 		local onGround = self.Owner:OnGround()
 
+		if self:GetIronsights() then
+			movepercent = movepercent * 0.2
+		end
+
 		local c_move2 = movepercent
 		c_move = Lerp(ft8, c_move or 0, onGround and movepercent or 0)
-		c_sight = Lerp(ft8, c_sight or 0, self:GetIronsights() and onGround and not self:GetReloading() and not self:IsSprinting() and 0.15 or 1)
+		c_sight = Lerp(ft8, c_sight or 0, self:GetIronsights() and onGround and not self:GetReloading() and not self:IsSprinting() and 0.1 or 1)
 
 		local jump = self:GetIronsights() and math.Clamp(ovel.z / 120, -0.25, 0.5) or 0
 		c_jump = Lerp(ft8, c_jump or 0, (self.Owner:GetMoveType() == MOVETYPE_NOCLIP or self:GetIronsights()) and jump or math.Clamp(ovel.z / 120, -1.5, 1))
@@ -525,3 +527,5 @@ surface.CreateFont( "CSSelectIcons", {
 	additive = true,
 	font = "csd"
 } )
+
+print("[longsword] Longsword weapon base loaded. Version 1. Copyright 2019 vin")
