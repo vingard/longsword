@@ -88,6 +88,13 @@ function SWEP:PlayAnim(act)
 	vmodel:SendViewModelMatchingSequence(seq)
 end
 
+function SWEP:PlayAnimWorld(act)
+	local wmodel = self
+	local seq = wmodel:SelectWeightedSequence(act)
+
+	self:ResetSequence(seq)
+end
+
 function SWEP:Deploy()
 	self:PlayAnim(ACT_VM_DRAW)
 	self.Owner:GetViewModel():SetPlaybackRate(1)
@@ -131,17 +138,18 @@ function SWEP:ShootEffects()
 
 		if posang then
 			local ef = EffectData()
-			ef:SetFlags( 0 )
-			ef:SetEntity( self.Owner:GetViewModel() )
-			ef:SetAttachment( 1 )
-			ef:SetScale( 1 )
+			ef:SetFlags(0)
+			ef:SetEntity(self.Owner:GetViewModel())
+			ef:SetAttachment(1)
+			ef:SetScale(1)
 
-			util.Effect( "CS_MuzzleFlash", ef )
+			util.Effect("CS_MuzzleFlash", ef)
 		end
 	end
 
 	self.Owner:MuzzleFlash()
-	self.Owner:SetAnimation( PLAYER_ATTACK1 )
+	self:PlayAnimWorld(ACT_VM_PRIMARYATTACK)
+	self.Owner:SetAnimation(PLAYER_ATTACK1)
 end
 
 function SWEP:IsSprinting()
