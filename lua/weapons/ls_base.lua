@@ -133,7 +133,7 @@ function SWEP:ShootEffects()
 		self:PlayAnim(ACT_VM_PRIMARYATTACK)
 		self:QueueIdle()
 	else
-		self:SetIronsightsRecoil( math.Clamp( 7.5 * (self.IronsightsRecoilVisualMultiplier or 1) * self.Primary.Recoil, 0, 10 ) )
+		self:SetIronsightsRecoil( math.Clamp( 7.5 * (self.IronsightsRecoilVisualMultiplier or 1) * self.Primary.Recoil, 0, 20 ) )
 
 		if CLIENT then
 			local isThirdperson = hook.Run("ShouldDrawLocalPlayer", self.Owner)
@@ -354,7 +354,9 @@ end
 
 function SWEP:CalculateSpread()
 	local spread = self.Primary.Cone
-	spread = spread + self.Primary.Cone * math.Clamp( self.Owner:GetVelocity():Length2D() / self.Owner:GetRunSpeed(), 0, self.Spread.VelocityMod )
+	local maxSpeed = self.LoweredPos and self.Owner:GetWalkSpeed() or self.Owner:GetRunSpeed()
+
+	spread = spread + self.Primary.Cone * math.Clamp( self.Owner:GetVelocity():Length2D() / maxSpeed, 0, self.Spread.VelocityMod )
 	spread = spread + self:GetRecoil() * self.Spread.RecoilMod
 
 	if not self.Owner:IsOnGround() then
@@ -370,6 +372,10 @@ function SWEP:CalculateSpread()
 	end
 
 	spread = math.Clamp( spread, self.Spread.Min, self.Spread.Max )
+
+	if CLIENT and impulse_DevHud then
+		self.LastSpread = spread
+	end
 
 	return spread
 end
@@ -558,6 +564,31 @@ function SWEP:DrawWeaponSelection( x, y, w, h, a )
 
 	--draw.SimpleText( self.IconLetter, "CSSelectIcons", x + w / 2, y + h * 0.65,
 	--	Color( col.r, col.g, col.b, a ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+end
+
+
+local watermarkCol = Color(255,255,255,120)
+
+function SWEP:DrawHUD()
+	if impulse_DevHud and LocalPlayer():IsSuperAdmin() then
+		local scrW = ScrW()
+		local scrH = ScrH()
+
+		surface.SetTextColor(watermarkCol)
+		surface.SetFont("Impulse-Elements18-Shadow")
+
+		surface.SetTextPos((scrW / 2) + 30, (scrH / 2))
+		surface.DrawText("recoil: "..self:GetRecoil())
+
+		surface.SetTextPos((scrW / 2) + 30, (scrH / 2) + 20)
+		surface.DrawText("ironsights recoil: "..self:GetIronsightsRecoil())
+
+		surface.SetTextPos((scrW / 2) + 30, (scrH / 2) + 40)
+		surface.DrawText("ironsights: "..tostring(self:GetIronsights()))
+
+		surface.SetTextPos((scrW / 2) + 30, (scrH / 2) + 60)
+		surface.DrawText("last spread: "..(self.LastSpread or "shoot me"))
+	end
 end
 
 surface.CreateFont( "CSKillIcons", { 
