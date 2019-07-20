@@ -130,7 +130,6 @@ end
 
 function SWEP:ShootEffects()
 	if not self:GetIronsights() or not self.UseIronsightsRecoil then
-		--self:SendWeaponAnim( self:Clip1() > 0 and ACT_VM_PRIMARYATTACK or ACT_VM_DRYFIRE )
 		self:PlayAnim(ACT_VM_PRIMARYATTACK)
 		self:QueueIdle()
 	else
@@ -381,11 +380,15 @@ SWEP.CrosshairAlpha = 1
 SWEP.CrosshairSpread = 0
 
 function SWEP:ShouldDrawCrosshair()
+	if hook.Run("ShouldDrawLocalPlayer", self.Owner) then
+		return true	
+	end
+
 	if self:GetReloading() or (self:IsSprinting() and self.LoweredPos) then
 		return false
 	end
 
-	if self:GetIronsights() and not self.IronsightsCrosshair then
+	if (self:GetIronsights() and not self.IronsightsCrosshair) then
 		return false
 	end
 
@@ -535,9 +538,9 @@ end
 
 SWEP.FOVMultiplier = 1
 SWEP.LastFOVUpdate = 0 -- gets called many times per frame... weird.
-function SWEP:TranslateFOV( fov )
+function SWEP:TranslateFOV(fov)
 	if self.LastFOVUpdate < CurTime() then
-		self.FOVMultiplier = Lerp( FrameTime() * 15, self.FOVMultiplier, self:GetIronsights() and self.IronsightsFOV or 1 )
+		self.FOVMultiplier = Lerp(FrameTime() * 15, self.FOVMultiplier, self:GetIronsights() and self.IronsightsFOV or 1)
 		self.LastFOVUpdate = CurTime()
 	end
 
