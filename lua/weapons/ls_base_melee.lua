@@ -7,6 +7,9 @@ SWEP.Primary.Automatic = false
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.DefaultClip = -1
 
+SWEP.Primary.Sound = Sound("WeaponFrag.Roll")
+SWEP.Primary.ImpactSound = Sound("Canister.ImpactHard")
+
 function SWEP:PrimaryAttack()
 	if self.PrePrimaryAttack then
 		self.PrePrimaryAttack(self)
@@ -65,12 +68,26 @@ function SWEP:ClubAttack()
 			dmg:SetDamage(self.Primary.Damage)
 			dmg:SetDamageType(DMG_CLUB)
 			dmg:SetDamagePosition(tr.HitPos)
-			dmg:SetDamageForce(self.Owner:GetAimVector() * 10000)
+
+			if ent:GetClass() != "prop_ragdoll" then
+				dmg:SetDamageForce(self.Owner:GetAimVector() * 10000)
+			end
 
 			ent:DispatchTraceAttack(dmg, trace.start, trace.endpos)
 
 			if SERVER and ent:IsPlayer() and self.Primary.FlashTime then
 				ent:ScreenFade(SCREENFADE.IN, color_white, self.Primary.FlashTime, 0)
+			end
+
+			if tr.MatType == MAT_FLESH then
+				ent:EmitSound("Flesh.ImpactHard")
+
+				local effect = EffectData()
+				effect:SetStart(tr.HitPos)
+				effect:SetNormal(tr.HitNormal)
+				effect:SetOrigin(tr.HitPos)
+
+				util.Effect("BloodImpact", effect, true, true)
 			end
 		end
 	end
