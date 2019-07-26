@@ -68,6 +68,10 @@ function SWEP:ClubAttack()
 			dmg:SetDamageForce(self.Owner:GetAimVector() * 10000)
 
 			ent:DispatchTraceAttack(dmg, trace.start, trace.endpos)
+
+			if SERVER and ent:IsPlayer() and self.Primary.FlashTime then
+				ent:ScreenFade(SCREENFADE.IN, color_white, self.Primary.FlashTime, 0)
+			end
 		end
 	end
 end
