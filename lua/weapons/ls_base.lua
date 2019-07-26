@@ -61,6 +61,10 @@ function SWEP:SetupDataTables()
 	self:NetworkVar("Float", 2, "Recoil")
 	self:NetworkVar("Float", 3, "ReloadTime")
 	self:NetworkVar("Float", 4, "NextIdle")
+
+	if self.ExtraDataTables then
+		self.ExtraDataTables(self)
+	end
 end
 
 function SWEP:Initialize()
@@ -217,6 +221,10 @@ function SWEP:Holster()
 		self.ViewModelPos = Vector( 0, 0, 0 )
 		self.ViewModelAng = Angle( 0, 0, 0 )
 		self.FOV = nil
+	end
+
+	if self.ExtraHolster then
+		self.ExtraHolster(self)
 	end
 	
 	return true

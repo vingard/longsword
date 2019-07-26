@@ -8,7 +8,11 @@ SWEP.Primary.ClipSize = -1
 SWEP.Primary.DefaultClip = -1
 
 function SWEP:PrimaryAttack()
-	self:ShootBullet(self.Primary.Damage, self.Primary.NumShots, 0)
+	if self.PrePrimaryAttack then
+		self.PrePrimaryAttack(self)
+	end
+
+	self:ClubAttack()
 	self:ViewPunch()
 	self:EmitSound(self.Primary.Sound)
 
@@ -26,37 +30,44 @@ function SWEP:Reload()
 	return
 end
 
-function SWEP:ShootBullet(damage, num_bullets, aimcone)
-	local bullet = {}
+function SWEP:ClubAttack()
+	self.Owner:LagCompensation(true)
 
-	bullet.Num 	= num_bullets
-	bullet.Src 	= self.Owner:GetShootPos() -- Source
-	bullet.Dir 	= self.Owner:GetAimVector() -- Dir of bullet
-	bullet.Spread = 0
-	bullet.Distance = self.Primary.Range or 85
-	bullet.HullSize = 5
+	local trace = {}
+	trace.start = self.Owner:GetShootPos()
+	trace.endpos = trace.start + self.Owner:GetAimVector() * (self.Primary.Range or 85)
+	trace.filter = self.Owner
 
-	bullet.Tracer	= 0 -- Show a tracer on every x bullets
-	bullet.Force	= self.Primary.Force -- Amount of force to give to phys objects
-	bullet.Damage	= damage
-	bullet.AmmoType = ""
+	local tr = util.TraceLine(trace)
 
-	bullet.Callback = function(attacker, tr)
-		if IsValid(self) and tr.Hit then
-			if self.Primary.ImpactSound then
-				self.Owner:EmitSound(self.Primary.ImpactSound)
-			end
+	self.Owner:LagCompensation(false)
 
-			if self.Primary.ImpactEffect then
-				local effect = EffectData()
-				effect:SetStart(tr.HitPos)
-				effect:SetNormal(tr.HitNormal)
-				effect:SetOrigin(tr.HitPos)
+	if SERVER and tr.Hit then
+		if self.Primary.ImpactSound then
+			self.Owner:EmitSound(self.Primary.ImpactSound)
+		end
 
-				util.Effect(self.Primary.ImpactEffect, effect, true, true)
-			end
+		if self.Primary.ImpactEffect then
+			local effect = EffectData()
+			effect:SetStart(tr.HitPos)
+			effect:SetNormal(tr.HitNormal)
+			effect:SetOrigin(tr.HitPos)
+
+			util.Effect(self.Primary.ImpactEffect, effect, true, true)
+		end
+
+		local ent = tr.Entity
+
+		if IsValid(ent) then
+			local dmg = DamageInfo()
+			dmg:SetAttacker(self.Owner)
+			dmg:SetInflictor(self)
+			dmg:SetDamage(self.Primary.Damage)
+			dmg:SetDamageType(DMG_CLUB)
+			dmg:SetDamagePosition(tr.HitPos)
+			dmg:SetDamageForce(self.Owner:GetAimVector() * 10000)
+
+			ent:DispatchTraceAttack(dmg, trace.start, trace.endpos)
 		end
 	end
-
-	self.Owner:FireBullets(bullet)
 end
