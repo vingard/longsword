@@ -567,13 +567,8 @@ end
 
 SWEP.SelectColor = Color( 255, 210, 0 )
 SWEP.EmptySelectColor = Color( 255, 50, 0 )
-function SWEP:DrawWeaponSelection( x, y, w, h, a )
-	local col = self:HasAmmo() and self.SelectColor or self.EmptySelectColor
-
-	--draw.SimpleText( self.IconLetter, "CSSelectIcons", x + w / 2, y + h * 0.65,
-	--	Color( col.r, col.g, col.b, a ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+function SWEP:DrawWeaponSelection()
 end
-
 
 local watermarkCol = Color(255,255,255,120)
 
