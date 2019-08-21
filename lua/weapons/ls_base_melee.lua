@@ -108,8 +108,8 @@ function SWEP:ClubAttack()
 				util.Effect("BloodImpact", effect, true, true)
 			elseif tr.MatType == MAT_WOOD then
 				ent:EmitSound("Wood.ImpactHard")
-			elseif tr.MatType == MAT_ROCK then
-				ent:EmitSound("Rock.ImpactHard")
+			elseif tr.MatType == MAT_CONCRETE then
+				ent:EmitSound("Concrete.ImpactHard")
 			end
 		elseif self.Primary.ImpactSoundWorldOnly then
 			self.Owner:EmitSound(self.Primary.ImpactSound)
