@@ -15,8 +15,18 @@ function SWEP:PrimaryAttack()
 		self.PrePrimaryAttack(self)
 	end
 
-	self:ClubAttack()
-	self:ViewPunch()
+	if self.Primary.HitDelay then
+		timer.Simple(self.Primary.HitDelay, function()
+			if IsValid(self) then
+				self:ClubAttack()
+				self:ViewPunch()
+			end
+		end)
+	else
+		self:ClubAttack()
+		self:ViewPunch()
+	end
+
 	self:EmitSound(self.Primary.Sound)
 
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
@@ -46,6 +56,8 @@ function SWEP:ClubAttack()
 	self.Owner:LagCompensation(false)
 
 	if SERVER and tr.Hit then
+		hook.Run("LongswordMeleeHit", self.Owner)
+
 		if self.Primary.ImpactSound then
 			self.Owner:EmitSound(self.Primary.ImpactSound)
 		end
@@ -62,10 +74,13 @@ function SWEP:ClubAttack()
 		local ent = tr.Entity
 
 		if IsValid(ent) then
+			local newdmg = hook.Run("LongswordCalculateMeleeDamage", self.Owner, self.Primary.Damage)
+			hook.Run("LongswordHitEntity", self.Owner, ent)
+
 			local dmg = DamageInfo()
 			dmg:SetAttacker(self.Owner)
 			dmg:SetInflictor(self)
-			dmg:SetDamage(self.Primary.Damage)
+			dmg:SetDamage(newdmg or self.Primary.Damage)
 			dmg:SetDamageType(DMG_CLUB)
 			dmg:SetDamagePosition(tr.HitPos)
 
