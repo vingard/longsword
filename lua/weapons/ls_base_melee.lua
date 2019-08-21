@@ -61,7 +61,7 @@ function SWEP:ClubAttack()
 	if SERVER and tr.Hit then
 		hook.Run("LongswordMeleeHit", self.Owner)
 
-		if self.Primary.ImpactSound then
+		if self.Primary.ImpactSound and not self.Primary.ImpactSoundWorldOnly then
 			self.Owner:EmitSound(self.Primary.ImpactSound)
 		end
 
@@ -106,7 +106,11 @@ function SWEP:ClubAttack()
 				effect:SetOrigin(tr.HitPos)
 
 				util.Effect("BloodImpact", effect, true, true)
+			elseif tr.MatType == MAT_WOOD then
+				ent:EmitSound("Wood.ImpactHard")
 			end
+		elseif self.Primary.ImpactSoundWorldOnly then
+			self.Owner:EmitSound(self.Primary.ImpactSound)
 		end
 	end
 end
