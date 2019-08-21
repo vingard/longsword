@@ -50,8 +50,11 @@ function SWEP:ClubAttack()
 	trace.start = self.Owner:GetShootPos()
 	trace.endpos = trace.start + self.Owner:GetAimVector() * (self.Primary.Range or 85)
 	trace.filter = self.Owner
+	trace.mask = MASK_SHOT_HULL
+	trace.mins = Vector(-1, -1, -1)
+	trace.maxs = Vector(1, 1, 1)
 
-	local tr = util.TraceLine(trace)
+	local tr = util.TraceHull(trace)
 
 	self.Owner:LagCompensation(false)
 
@@ -74,7 +77,7 @@ function SWEP:ClubAttack()
 		local ent = tr.Entity
 
 		if IsValid(ent) then
-			local newdmg = hook.Run("LongswordCalculateMeleeDamage", self.Owner, self.Primary.Damage)
+			local newdmg = hook.Run("LongswordCalculateMeleeDamage", self.Owner, self.Primary.Damage, ent)
 			hook.Run("LongswordHitEntity", self.Owner, ent)
 
 			local dmg = DamageInfo()
