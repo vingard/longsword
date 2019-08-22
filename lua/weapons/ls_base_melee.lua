@@ -110,6 +110,8 @@ function SWEP:ClubAttack()
 				ent:EmitSound("Wood.ImpactHard")
 			elseif tr.MatType == MAT_CONCRETE then
 				ent:EmitSound("Concrete.ImpactHard")
+			elseif self.Primary.ImpactSoundWorldOnly then
+				self.Owner:EmitSound(self.Primary.ImpactSound)
 			end
 		elseif self.Primary.ImpactSoundWorldOnly then
 			self.Owner:EmitSound(self.Primary.ImpactSound)
