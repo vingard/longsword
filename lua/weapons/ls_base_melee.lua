@@ -95,6 +95,8 @@ function SWEP:ClubAttack()
 
 			if SERVER and ent:IsPlayer() and self.Primary.FlashTime then
 				ent:ScreenFade(SCREENFADE.IN, color_white, self.Primary.FlashTime, 0)
+				ent.StunTime = CurTime() + self.Primary.FlashTime
+				ent.StunStartTime = CurTime()
 			end
 
 			if tr.MatType == MAT_FLESH then
