@@ -461,7 +461,7 @@ function SWEP:GetViewModelPosition( pos, ang )
 
 	local predicted = IsFirstTimePredicted()
 	local ft = FrameTime()
-	local ct = CurTime()
+	local ct = RealTime()
 
 	-- camera move lag, based on QTG weapon base
 	local aDelta = self.Owner:EyeAngles() - lastAng
