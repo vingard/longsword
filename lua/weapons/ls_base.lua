@@ -341,7 +341,11 @@ function SWEP:Reload()
 	end
 	self:QueueIdle()
 
-	if self.ReloadSound then self:EmitSound(self.ReloadSound) end
+	if self.ReloadSound then 
+		self:EmitSound(self.ReloadSound) 
+	elseif self.OnReload then
+		self.OnReload(self)
+	end
 
 	self:SetReloading( true )
 	self:SetReloadTime( CurTime() + self.Owner:GetViewModel():SequenceDuration() )

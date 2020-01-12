@@ -120,6 +120,8 @@ function SWEP:ClubAttack()
 			elseif self.Primary.ImpactSoundWorldOnly then
 				self.Owner:EmitSound(self.Primary.ImpactSound)
 			end
+		elseif self.MeleeHitFallback and self.MeleeHitFallback(self, tr) then
+			return
 		elseif self.Primary.ImpactSoundWorldOnly then
 			self.Owner:EmitSound(self.Primary.ImpactSound)
 		end

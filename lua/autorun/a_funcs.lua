@@ -13,4 +13,20 @@ if SERVER then
 			end
 		end
 	end)
+
+	hook.Add("ScalePlayerDamage", "longswordArmourPen", function(ply, hitgroup, dmg)
+		if ply:Armor() == 0 then
+			return
+		end
+
+		local attacker = dmg:GetAttacker()
+
+		if IsValid(attacker) and attacker:IsPlayer() then
+			local wep = attacker:GetActiveWeapon()
+
+			if IsValid(wep) and wep.Primary.PenetrationScale then
+				dmg:ScaleDamage(wep.Primary.PenetrationScale)
+			end
+		end
+	end)
 end
