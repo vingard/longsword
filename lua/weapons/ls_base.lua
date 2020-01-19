@@ -434,6 +434,10 @@ function SWEP:OffsetThink()
 	if not offset_pos then offset_pos = vector_origin end
 	if not offset_ang then offset_ang = angle_zero end
 
+	if self.ViewModelOffset then
+		offset_pos = offset_pos + self.ViewModelOffset
+	end
+
 	self.ViewModelPos = LerpVector(FrameTime() * 10, self.ViewModelPos, offset_pos)
 	self.ViewModelAngle = LerpAngle(FrameTime() * 10, self.ViewModelAngle, offset_ang)
 end

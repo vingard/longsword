@@ -71,10 +71,6 @@ function SWEP:ThrowAttack()
 
 	projectile:SetPos(pos)
 
-	if self.Projectile.Mass then
-		projectile:SetMass(self.Projectile.Mass)
-	end
-
 	if self.Projectile.Timer then
 		projectile.Timer = CurTime() + self.Projectile.Timer
 	end
@@ -113,9 +109,9 @@ function SWEP:ThrowAttack()
 	local force = 700
 
 	if self.Owner:KeyDown(IN_FORWARD) then
-		force = 1100
+		force = 1000
 	elseif self.Owner:KeyDown(IN_BACK) then
-		force = 300
+		force = 600
 	end
 
 	if self.Projectile.ForceMod then
@@ -128,6 +124,12 @@ function SWEP:ThrowAttack()
 		return
 	end
 
+	if self.Projectile.Mass then
+		if IsValid(phys) then
+			phys:SetMass(self.Projectile.Mass)
+		end
+	end
+
 	phys:ApplyForceCenter(self.Owner:GetAimVector() * force * 2 + Vector(0, 0, 0))
-	phys:AddAngleVelocity(Vector(math.random(-500,500),math.random(-500,500),math.random(-500,500)))
+	phys:AddAngleVelocity(Vector(math.random(-500, 500), math.random(-500, 500), math.random(-500, 500)))
 end
