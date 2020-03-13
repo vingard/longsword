@@ -77,6 +77,10 @@ function SWEP:Initialize()
 	self:SetNextIdle(0)
 
 	self:SetHoldType(self.HoldType)
+
+	if SERVER and self.CustomMaterial then
+		self.Weapon:SetMaterial(self.CustomMaterial)
+	end
 end
 
 function SWEP:OnReloaded()
@@ -100,6 +104,13 @@ function SWEP:PlayAnimWorld(act)
 end
 
 function SWEP:Deploy()
+	if self.CustomMaterial then
+		if CLIENT then
+			self.Owner:GetViewModel():SetMaterial(self.CustomMaterial)
+			self.CustomMatSetup = true
+		end
+	end
+
 	self:PlayAnim(ACT_VM_DRAW)
 	self.Owner:GetViewModel():SetPlaybackRate(1)
 
@@ -223,11 +234,35 @@ function SWEP:Holster()
 		self.FOV = nil
 	end
 
+	if self.CustomMaterial then
+		if CLIENT then
+			if self.Owner == LocalPlayer() then
+				self.Owner:GetViewModel():SetMaterial("")
+			end
+		end
+	end
+
 	if self.ExtraHolster then
 		self.ExtraHolster(self)
 	end
 	
 	return true
+end
+
+function SWEP:OnRemove()
+	if self.CustomMaterial then
+		if CLIENT then
+			if not self.Owner.GetViewModel then -- disconnect errors
+				return
+			end
+
+			if not self.Owner == LocalPlayer() then
+				return
+			end
+
+			self.Owner:GetViewModel():SetMaterial("")
+		end
+	end
 end
 
 function SWEP:QueueIdle()
@@ -442,7 +477,12 @@ function SWEP:OffsetThink()
 	self.ViewModelAngle = LerpAngle(FrameTime() * 10, self.ViewModelAngle, offset_ang)
 end
 
-function SWEP:PreDrawViewModel()
+function SWEP:PreDrawViewModel(vm)
+	if CLIENT and self.CustomMaterial and not self.CustomMatSetup then
+		self.Owner:GetViewModel():SetMaterial(self.CustomMaterial)
+		self.CustomMatSetup = true
+	end
+
 	self:OffsetThink()
 end
 
