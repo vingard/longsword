@@ -149,26 +149,26 @@ function SWEP:ShootEffects()
 		self:QueueIdle()
 	else
 		self:SetIronsightsRecoil( math.Clamp( 7.5 * (self.IronsightsRecoilVisualMultiplier or 1) * self.Primary.Recoil, 0, 20 ) )
+	end
 
-		if CLIENT then
-			local isThirdperson = hook.Run("ShouldDrawLocalPlayer", self.Owner)
+	if CLIENT then
+		local isThirdperson = hook.Run("ShouldDrawLocalPlayer", self.Owner)
 
-			if not isThirdperson then
-				local vm = self.Owner:GetViewModel()
-				local attachment = vm:LookupAttachment("muzzle")
-				local posang = vm:GetAttachment(attachment)
+		if not isThirdperson then
+			local vm = self.Owner:GetViewModel()
+			local attachment = vm:LookupAttachment("muzzle")
+			local posang = vm:GetAttachment(attachment)
 
-				if posang then
-					local ef = EffectData()
-					ef:SetOrigin(self.Owner:GetShootPos())
-					ef:SetStart(self.Owner:GetShootPos())
-					ef:SetNormal(self.Owner:EyeAngles():Forward())
-					ef:SetEntity(self.Owner:GetViewModel())
-					ef:SetAttachment(attachment)
-					ef:SetScale(self.IronsightsMuzzleFlashScale or 1)
+			if posang then
+				local ef = EffectData()
+				ef:SetOrigin(self.Owner:GetShootPos())
+				ef:SetStart(self.Owner:GetShootPos())
+				ef:SetNormal(self.Owner:EyeAngles():Forward())
+				ef:SetEntity(self.Owner:GetViewModel())
+				ef:SetAttachment(attachment)
+				ef:SetScale(self.IronsightsMuzzleFlashScale or 1)
 
-					util.Effect(self.IronsightsMuzzleFlash or "CS_MuzzleFlash", ef)
-				end
+				util.Effect(self.IronsightsMuzzleFlash or "CS_MuzzleFlash", ef)
 			end
 		end
 	end
