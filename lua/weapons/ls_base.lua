@@ -479,6 +479,9 @@ function SWEP:OffsetThink()
 
 	if self.ViewModelOffset then
 		offset_pos = offset_pos + self.ViewModelOffset
+	end
+
+	if self.ViewModelOffsetAng then
 		offset_ang = offset_ang + self.ViewModelOffsetAng
 	end
 
