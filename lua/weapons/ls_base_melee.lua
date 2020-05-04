@@ -17,7 +17,7 @@ function SWEP:PrimaryAttack()
 
 	if self.Primary.HitDelay then
 		timer.Simple(self.Primary.HitDelay, function()
-			if IsValid(self) then
+			if IsValid(self) and IsValid(self.Owner) then
 				self:ClubAttack()
 				self:ViewPunch()
 			end

@@ -479,6 +479,7 @@ function SWEP:OffsetThink()
 
 	if self.ViewModelOffset then
 		offset_pos = offset_pos + self.ViewModelOffset
+		offset_ang = offset_ang + self.ViewModelOffsetAng
 	end
 
 	self.ViewModelPos = LerpVector(FrameTime() * 10, self.ViewModelPos, offset_pos)
@@ -536,9 +537,7 @@ function SWEP:GetViewModelPosition( pos, ang )
 		aDelta = aDelta * 0.02
 	end
 
-	if predicted then
-		cacheAng = LerpAngle(math.Clamp(ft * 10, 0, 1), cacheAng, aDelta)
-	end
+	cacheAng = LerpAngle(math.Clamp(ft * 10, 0, 1), cacheAng, aDelta)
 
 	lastAng = self.Owner:EyeAngles()
 
