@@ -540,7 +540,9 @@ function SWEP:GetViewModelPosition( pos, ang )
 		aDelta = aDelta * 0.02
 	end
 
-	cacheAng = LerpAngle(math.Clamp(ft * 10, 0, 1), cacheAng, aDelta)
+	if predicted then
+		cacheAng = LerpAngle(math.Clamp(ft * 10, 0, 1), cacheAng, aDelta)
+	end
 
 	lastAng = self.Owner:EyeAngles()
 
