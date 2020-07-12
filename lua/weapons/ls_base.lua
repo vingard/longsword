@@ -2,6 +2,7 @@
 
 AddCSLuaFile()
 
+SWEP.IsLongsword = true
 SWEP.PrintName = "Longsword"
 SWEP.Category = "LS"
 SWEP.DrawWeaponInfoBox = false
@@ -51,12 +52,13 @@ SWEP.IronsightsFOV = 0.8
 SWEP.IronsightsSensitivity = 0.8
 SWEP.IronsightsCrosshair = false
 SWEP.UseIronsightsRecoil = true
+SWEP.scopedIn = SWEP.scopedIn or false
 
 function SWEP:SetupDataTables()
 	self:NetworkVar("Bool", 0, "Ironsights")
 	self:NetworkVar("Bool", 1, "Reloading")
 	self:NetworkVar("Bool", 2, "Bursting")
-	self:NetworkVar("Int", 0, "Sight")
+	self:NetworkVar("String", 0, "CurAttachment")
 	self:NetworkVar("Float", 1, "IronsightsRecoil")
 	self:NetworkVar("Float", 2, "Recoil")
 	self:NetworkVar("Float", 3, "ReloadTime")
@@ -293,6 +295,21 @@ function SWEP:Think()
 
 	if self:GetBursting() then self:BurstThink() end
 	if self:GetReloading() then self:ReloadThink() end
+
+	if not CLIENT then
+		return
+	end
+
+	local attach = self:GetCurAttachment()
+	self.KnownAttachment = self.KnownAttachment or ""
+	
+	if self.KnownAttachment != attach then
+		self.KnownAttachment = attach
+		self:SetupModifiers(attach)
+	elseif attach == "" and self.KnownAttachment != attach then
+		self:RollbackModifiers(self.KnownAttachment)
+		self.KnownAttachment = attach
+	end
 end
 
 function SWEP:AddRecoil()
@@ -346,6 +363,11 @@ function SWEP:ViewPunch()
 end
 
 function SWEP:CanIronsight()
+	local att = self:GetCurAttachment()
+	if att != "" and self.Attachments[att] and self.Attachments[att].Behaviour == "sniper_sight" and hook.Run("ShouldDrawLocalPlayer", self.Owner) then
+		return false
+	end
+
 	return not self:IsSprinting() and not self:GetReloading() and self.Owner:IsOnGround()
 end
 
@@ -435,12 +457,43 @@ function SWEP:CalculateSpread()
 	return spread
 end
 
+
+function SWEP:HasAttachment(name)
+	return (self:GetCurAttachment() or "") == name
+end
+
+local wepMeta = FindMetaTable("Weapon")
+
+function wepMeta:GiveAttachment(name)
+	if not self.Attachments[name] then
+		return
+	end
+
+	self:SetCurAttachment(name)
+
+	if self.Attachments[name].Modifiers then
+		self:SetupModifiers(name)
+	end
+end
+
+function SWEP:SetupModifiers(name)
+	self.Attachments[name].ModSetup(self)
+end
+
+function SWEP:RollbackModifiers(name)
+	self.Attachments[name].ModCleanup(self)
+end
+
 if SERVER then return end
 
 SWEP.CrosshairAlpha = 1
 SWEP.CrosshairSpread = 0
 
 function SWEP:ShouldDrawCrosshair()
+	if self.NoCrosshair then
+		return false
+	end
+	
 	if hook.Run("ShouldDrawLocalPlayer", self.Owner) then
 		return true	
 	end
@@ -496,6 +549,50 @@ function SWEP:PreDrawViewModel(vm)
 	end
 
 	self:OffsetThink()
+
+	if self.scopedIn then
+		return self.scopedIn
+	end
+end
+
+function SWEP:ViewModelDrawn()
+	local vm = self.Owner:GetViewModel()
+
+	if not IsValid(vm) then
+		return
+	end
+
+	local attachment = self:GetCurAttachment()
+
+	if not self.Attachments or not self.Attachments[attachment] or not self.Attachments[attachment].Cosmetic then
+		return
+	end
+
+	local attData = self.Attachments[attachment]
+
+	if not IsValid(self.AttachedCosmetic) then
+		self.AttachedCosmetic = ClientsideModel(attData.Cosmetic.Model, RENDER_GROUP_VIEW_MODEL_OPAQUE)
+		self.AttachedCosmetic:SetParent(vm)
+		self.AttachedCosmetic:SetNoDraw(true)
+
+		if attData.Cosmetic.Scale then
+			self.AttachedCosmetic:SetModelScale(attData.Cosmetic.Scale)
+		end
+	end
+
+	local att = self.AttachedCosmetic
+	local c = attData.Cosmetic
+	local bone = vm:LookupBone(c.Bone)
+	local m = vm:GetBoneMatrix(bone)
+
+	local pos, ang = m:GetTranslation(), m:GetAngles()
+	
+	att:SetPos(pos + ang:Forward() * c.Pos.x + ang:Right() * c.Pos.y + ang:Up() * c.Pos.z)
+	ang:RotateAroundAxis(ang:Up(), c.Ang.y)
+	ang:RotateAroundAxis(ang:Right(), c.Ang.p)
+	ang:RotateAroundAxis(ang:Forward(), c.Ang.r)
+	att:SetAngles(ang)
+	att:DrawModel()
 end
 
 local sway = 1.5
@@ -618,6 +715,10 @@ function SWEP:TranslateFOV(fov)
 		self.LastFOVUpdate = CurTime()
 	end
 
+	if self.scopedIn then
+		return fov * self.FOVScoped
+	end
+
 	return fov * self.FOVMultiplier
 end
 
@@ -631,7 +732,7 @@ function SWEP:DrawWeaponSelection()
 end
 
 local watermarkCol = Color(255,255,255,120)
-
+local ironFade = ironFade or 0
 function SWEP:DrawHUD()
 	if impulse_DevHud and LocalPlayer():IsSuperAdmin() then
 		local scrW = ScrW()
@@ -652,22 +753,70 @@ function SWEP:DrawHUD()
 		surface.SetTextPos((scrW / 2) + 30, (scrH / 2) + 60)
 		surface.DrawText("last spread: "..(self.LastSpread or "shoot me"))
 	end
+
+	if self:HasAttachment("") then
+		return
+	end
+
+	local attachment = self:GetCurAttachment()
+
+	if not self.Attachments[attachment] or self.Attachments[attachment].Behaviour != "sniper_sight" then
+		return
+	end
+
+	if not self:GetIronsights() then
+		ironFade = 0
+		self.scopedIn = false
+		return
+	end
+
+	local scrw = ScrW()
+	local scrh = ScrH()
+	local ft = FrameTime()
+
+	if ironFade != 1 and not self.scopedIn then
+		ironFade = math.Clamp(ironFade + (ft * 2.6), 0, 1)
+
+		surface.SetDrawColor(ColorAlpha(color_black, ironFade * 255))
+		surface.DrawRect(0, 0, scrw, scrh)
+
+		return
+	else
+		self.scopedIn = true
+	end
+
+	if self.scopedIn and ironFade != 0 then
+		ironFade = math.Clamp(ironFade - (ft * 1), 0, 1)
+
+		surface.SetDrawColor(ColorAlpha(color_black, ironFade * 255))
+		surface.DrawRect(0, 0, scrw, scrh)
+	end
+
+	ls_StopHUDDraw = true
+
+	local scopeh = scrh * 1
+	local scopew = scopeh * 1.8
+	local hw = (scrw * 0.5) - (scopew / 2)
+	local hh = (scrh * 0.5) - (scopeh / 2)
+
+	surface.SetDrawColor(color_black)
+	surface.DrawRect(0, 0, scrw, hh)
+	surface.DrawRect(0, 0, scrw - scopew, scrh)
+	surface.DrawRect(scrw - hw, 0, scrw - scopew, scrh)
+	surface.DrawRect(0, hh + scopeh, scrw, scrh)
+
+	surface.SetDrawColor(color_white)
+	surface.SetMaterial(self.Attachments[attachment].ScopeTexture)
+	surface.DrawTexturedRect(hw, hh, scopew, scopeh)
 end
 
-surface.CreateFont( "CSKillIcons", { 
-	size = ScreenScale( 30 ),
-	weight = 500,
-	antialiasing = true,
-	additive = true,
-	font = "csd"
-} )
 
-surface.CreateFont( "CSSelectIcons", { 
-	size = ScreenScale( 60 ),
-	weight = 500,
-	antialiasing = true,
-	additive = true,
-	font = "csd"
-} )
+
+hook.Add("ShouldDrawHUDBox", "longswordimpulseHUDStopDrawing", function()
+	local v = tonumber(ls_StopHUDDraw or 1)
+	ls_StopHUDDraw = false
+
+	return tobool(v)
+end)
 
 print("[longsword] Longsword weapon base loaded. Version 1. Copyright 2019 vin")
