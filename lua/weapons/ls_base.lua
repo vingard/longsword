@@ -178,6 +178,10 @@ function SWEP:ShootEffects()
 	self.Owner:MuzzleFlash()
 	self:PlayAnimWorld(ACT_VM_PRIMARYATTACK)
 	self.Owner:SetAnimation(PLAYER_ATTACK1)
+
+	if self.CustomShootEffects then
+		self.CustomShootEffects()
+	end
 end
 
 function SWEP:IsSprinting()
@@ -303,10 +307,10 @@ function SWEP:Think()
 	local attach = self:GetCurAttachment()
 	self.KnownAttachment = self.KnownAttachment or ""
 	
-	if self.KnownAttachment != attach then
+	if self.KnownAttachment != attach and attach != "" then
 		self.KnownAttachment = attach
 		self:SetupModifiers(attach)
-	elseif attach == "" and self.KnownAttachment != attach then
+	elseif self.KnownAttachment != attach then
 		self:RollbackModifiers(self.KnownAttachment)
 		self.KnownAttachment = attach
 	end
@@ -471,8 +475,20 @@ function wepMeta:GiveAttachment(name)
 
 	self:SetCurAttachment(name)
 
-	if self.Attachments[name].Modifiers then
+	if self.Attachments[name].ModSetup then
 		self:SetupModifiers(name)
+	end
+end
+
+function wepMeta:TakeAttachment(name)
+	if not self.Attachments[name] then
+		return
+	end
+
+	self:SetCurAttachment("")
+
+	if self.Attachments[name].ModCleanup then
+		self:RollbackModifiers(name)
 	end
 end
 
@@ -570,6 +586,10 @@ function SWEP:ViewModelDrawn()
 
 	local attData = self.Attachments[attachment]
 
+	if attData.PlayerParent then
+		vm = self.Owner
+	end
+
 	if not IsValid(self.AttachedCosmetic) then
 		self.AttachedCosmetic = ClientsideModel(attData.Cosmetic.Model, RENDER_GROUP_VIEW_MODEL_OPAQUE)
 		self.AttachedCosmetic:SetParent(vm)
@@ -583,6 +603,11 @@ function SWEP:ViewModelDrawn()
 	local att = self.AttachedCosmetic
 	local c = attData.Cosmetic
 	local bone = vm:LookupBone(c.Bone)
+
+	if not bone then
+		return
+	end
+	
 	local m = vm:GetBoneMatrix(bone)
 
 	local pos, ang = m:GetTranslation(), m:GetAngles()
@@ -594,6 +619,72 @@ function SWEP:ViewModelDrawn()
 	att:SetAngles(ang)
 	att:DrawModel()
 end
+
+function SWEP:DrawWorldModel()
+	if self.ExtraDrawWorldModel then
+		self.ExtraDrawWorldModel(self)
+	else
+		self:DrawModel()
+	end
+
+	local attachment = self:GetCurAttachment()
+
+	if not self.Attachments or not self.Attachments[attachment] or not self.Attachments[attachment].Cosmetic then
+		return
+	end
+
+	local attData = self.Attachments[attachment]
+
+	if not IsValid(self.worldAttachment) then
+		self.worldAttachment = ClientsideModel(attData.Cosmetic.Model, RENDERGROUP_TRANSLUCENT)
+		self.worldAttachment:SetParent(self)
+		self.worldAttachment:SetNoDraw(true)
+
+		if attData.Cosmetic.Scale then
+			self.worldAttachment:SetModelScale(attData.Cosmetic.Scale)
+		end
+	end
+
+	local vm = self
+
+	if attData.Cosmetic.PlayerParent then
+		vm = self.Owner
+	end
+
+	local att = self.worldAttachment
+	local c = attData.Cosmetic
+	local w = c.World
+
+	if not w then
+		return
+	end
+
+	local bone = w.Bone and vm:LookupBone(w.Bone) or self:LookupBone("ValveBiped.Bip01_R_Hand")
+	local m = vm:GetBoneMatrix(bone)
+
+	local pos, ang = m:GetTranslation(), m:GetAngles()
+	
+	att:SetPos(pos + ang:Forward() * w.Pos.x + ang:Right() * w.Pos.y + ang:Up() * w.Pos.z)
+	ang:RotateAroundAxis(ang:Up(), w.Ang.y)
+	ang:RotateAroundAxis(ang:Right(), w.Ang.p)
+	ang:RotateAroundAxis(ang:Forward(), w.Ang.r)
+	att:SetAngles(ang)
+	--att:DrawModel()
+end
+
+hook.Add("PostPlayerDraw", "longswordDrawWorldAttachment", function()
+	local wep = LocalPlayer():GetActiveWeapon()
+
+	if not IsValid(wep) then
+		return
+	end
+
+	if IsValid(wep.worldAttachment) then
+		wep.worldAttachment:DrawModel()
+		wep.worldAttachment:SetRenderOrigin()
+		wep.worldAttachment:SetRenderAngles()
+	end
+end)
 
 local sway = 1.5
 local lastAng = Angle(0, 0, 0)
@@ -716,7 +807,7 @@ function SWEP:TranslateFOV(fov)
 	end
 
 	if self.scopedIn then
-		return fov * self.FOVScoped
+		return fov * (self.FOVScoped or 1)
 	end
 
 	return fov * self.FOVMultiplier
@@ -755,12 +846,18 @@ function SWEP:DrawHUD()
 	end
 
 	if self:HasAttachment("") then
+		if self.scopedIn then
+			self.scopedIn = false
+		end
 		return
 	end
 
 	local attachment = self:GetCurAttachment()
 
 	if not self.Attachments[attachment] or self.Attachments[attachment].Behaviour != "sniper_sight" then
+		if self.scopedIn then
+			self.scopedIn = false
+		end
 		return
 	end
 
@@ -805,9 +902,13 @@ function SWEP:DrawHUD()
 	surface.DrawRect(scrw - hw, 0, scrw - scopew, scrh)
 	surface.DrawRect(0, hh + scopeh, scrw, scrh)
 
-	surface.SetDrawColor(color_white)
+	surface.SetDrawColor(self.Attachments[attachment].ScopeColour or color_white)
 	surface.SetMaterial(self.Attachments[attachment].ScopeTexture)
 	surface.DrawTexturedRect(hw, hh, scopew, scopeh)
+
+	if self.Attachments[attachment].ScopePaint then
+		self.Attachments[attachment].ScopePaint(self)
+	end
 end
 
 

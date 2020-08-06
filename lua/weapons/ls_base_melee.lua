@@ -51,10 +51,16 @@ function SWEP:ClubAttack()
 	trace.endpos = trace.start + self.Owner:GetAimVector() * (self.Primary.Range or 85)
 	trace.filter = self.Owner
 	trace.mask = MASK_SHOT_HULL
-	trace.mins = Vector(-1, -1, -1)
-	trace.maxs = Vector(1, 1, 1)
+
+	local boxSize = 6
+	trace.mins = Vector(-boxSize, -boxSize, -boxSize)
+	trace.maxs = Vector(boxSize, boxSize, boxSize)
 
 	local tr = util.TraceHull(trace)
+
+	if CLIENT then
+		debugoverlay.BoxAngles(tr.HitPos, trace.mins, trace.maxs, self.Owner:EyeAngles(), 5, Color(200, 0, 0, 100))
+	end
 
 	self.Owner:LagCompensation(false)
 
