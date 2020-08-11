@@ -44,25 +44,25 @@ function SWEP:Reload()
 end
 
 function SWEP:ClubAttack()
-	self.Owner:LagCompensation(true)
-
 	local trace = {}
 	trace.start = self.Owner:GetShootPos()
 	trace.endpos = trace.start + self.Owner:GetAimVector() * (self.Primary.Range or 85)
 	trace.filter = self.Owner
 	trace.mask = MASK_SHOT_HULL
 
-	local boxSize = 6
+	local boxSize = self.Primary.HullSize or 6
 	trace.mins = Vector(-boxSize, -boxSize, -boxSize)
 	trace.maxs = Vector(boxSize, boxSize, boxSize)
 
+	self.Owner:LagCompensation(true)
+
 	local tr = util.TraceHull(trace)
+
+	self.Owner:LagCompensation(false)
 
 	if CLIENT then
 		debugoverlay.BoxAngles(tr.HitPos, trace.mins, trace.maxs, self.Owner:EyeAngles(), 5, Color(200, 0, 0, 100))
 	end
-
-	self.Owner:LagCompensation(false)
 
 	if SERVER and tr.Hit then
 		hook.Run("LongswordMeleeHit", self.Owner)
