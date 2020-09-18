@@ -449,7 +449,7 @@ function SWEP:CalculateSpread()
 	end
 
 	if self:GetIronsights() then
-		spread = spread * self.Spread.IronsightsMod
+		spread = spread * (self.Spread.IronsightsMod or 1)
 	end
 
 	spread = math.Clamp( spread, self.Spread.Min, self.Spread.Max )

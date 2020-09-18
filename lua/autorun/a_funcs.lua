@@ -24,7 +24,7 @@ if SERVER then
 		if IsValid(attacker) and attacker:IsPlayer() then
 			local wep = attacker:GetActiveWeapon()
 
-			if IsValid(wep) and wep.Primary.PenetrationScale then
+			if IsValid(wep) and wep.Primary and wep.Primary.PenetrationScale then
 				dmg:ScaleDamage(wep.Primary.PenetrationScale)
 			end
 		end
