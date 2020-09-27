@@ -906,6 +906,17 @@ function SWEP:DrawHUD()
 	surface.SetMaterial(self.Attachments[attachment].ScopeTexture)
 	surface.DrawTexturedRect(hw, hh, scopew, scopeh)
 
+	if self.Attachments[attachment].NeedsHDR then
+		local hasHDR = GetConVar("mat_hdr_level"):GetInt() or 0
+
+		if hasHDR == 0 then
+			draw.SimpleText("WARNING!", "ChatFont", ScrW() * 0.5, ScrH() * 0.5, nil, TEXT_ALIGN_CENTER)
+			draw.SimpleText("To see this scope, you must enable HDR in your settings.", "ChatFont", ScrW() * 0.5, (ScrH() * 0.5) + 20, nil, TEXT_ALIGN_CENTER)
+			draw.SimpleText("Press ESC > Settings > Video > Advanced Settings > High Dynamic Range to FULL", "ChatFont", ScrW() * 0.5 , (ScrH() * 0.5) + 40, nil, TEXT_ALIGN_CENTER)
+			draw.SimpleText("You will then have to rejoin.", "ChatFont", ScrW() * 0.5 , (ScrH() * 0.5) + 60, nil, TEXT_ALIGN_CENTER)
+		end
+	end
+
 	if self.Attachments[attachment].ScopePaint then
 		self.Attachments[attachment].ScopePaint(self)
 	end
