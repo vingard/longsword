@@ -469,7 +469,7 @@ end
 local wepMeta = FindMetaTable("Weapon")
 
 function wepMeta:GiveAttachment(name)
-	if not self.Attachments[name] then
+	if not self.Attachments or not self.Attachments[name] then
 		return
 	end
 
@@ -481,7 +481,7 @@ function wepMeta:GiveAttachment(name)
 end
 
 function wepMeta:TakeAttachment(name)
-	if not self.Attachments[name] then
+	if not self.Attachments or not self.Attachments[name] then
 		return
 	end
 
