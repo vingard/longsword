@@ -32,9 +32,14 @@ function SWEP:PrimaryAttack()
 
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 
-	self:SendWeaponAnim(ACT_VM_THROW)
-	self.Owner:SetAnimation(PLAYER_ATTACK1)
-	self:SendWeaponAnim(ACT_VM_DRAW)
+	if self.DoFireAnim then
+		self:PlayAnim(ACT_VM_PRIMARYATTACK)
+		self.Owner:SetAnimation(PLAYER_ATTACK1)
+	else
+		self:SendWeaponAnim(ACT_VM_THROW)
+		self.Owner:SetAnimation(PLAYER_ATTACK1)
+		self:SendWeaponAnim(ACT_VM_DRAW)
+	end
 
 	if self:Clip1() < 1 then
 		if self.PairedItem then

@@ -31,7 +31,12 @@ function SWEP:PrimaryAttack()
 
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 
-	self:SendWeaponAnim(ACT_VM_HITCENTER)
+	if self.DoFireAnim then
+		self:PlayAnim(ACT_VM_PRIMARYATTACK)
+	else
+		self:SendWeaponAnim(ACT_VM_HITCENTER)
+	end
+	
 	self.Owner:SetAnimation(PLAYER_ATTACK1)
 end
 
@@ -101,7 +106,7 @@ function SWEP:ClubAttack()
 
 			if SERVER and ent:IsPlayer() then
 				if self.Primary.FlashTime then
-					ent:ScreenFade(SCREENFADE.IN, color_white, self.Primary.FlashTime, 0)
+					ent:ScreenFade(SCREENFADE.IN, self.Primary.FlashColour or color_white, self.Primary.FlashTime, 0)
 					ent.StunTime = CurTime() + self.Primary.FlashTime
 					ent.StunStartTime = CurTime()
 				elseif self.Primary.StunTime then
