@@ -367,6 +367,10 @@ function SWEP:ViewPunch()
 end
 
 function SWEP:CanIronsight()
+	if self.NoIronsights then
+		return false
+	end
+	
 	local att = self:GetCurAttachment()
 	if att != "" and self.Attachments[att] and self.Attachments[att].Behaviour == "sniper_sight" and hook.Run("ShouldDrawLocalPlayer", self.Owner) then
 		return false
