@@ -140,6 +140,12 @@ function SWEP:ShootBullet(damage, num_bullets, aimcone)
 	bullet.Damage	= damage
 	bullet.AmmoType = ""
 
+	if CLIENT then
+		bullet.Callback = function(attacker, tr)
+			debugoverlay.Cross(tr.HitPos, 2, 3, Color(255, 0, 0), true)
+		end
+	end
+
 	self.Owner:FireBullets(bullet)
 
 	self:ShootEffects()
@@ -317,11 +323,11 @@ function SWEP:Think()
 end
 
 function SWEP:AddRecoil()
-	self:SetRecoil( math.Clamp( self:GetRecoil() + self.Primary.Recoil * 0.4, 0, 1 ) )
+	self:SetRecoil( math.Clamp( self:GetRecoil() + self.Primary.Recoil * 0.4, 0, self.Primary.MaxRecoil or 1 ) )
 end
 
 function SWEP:RecoilThink()
-	self:SetRecoil( math.Clamp( self:GetRecoil() - FrameTime() * 1.4, 0, 1 ) )
+	self:SetRecoil( math.Clamp( self:GetRecoil() - FrameTime() * (self.Primary.RecoilRecoveryRate or 1.4), 0, self.Primary.MaxRecoil or 1 ) )
 end
 
 function SWEP:BurstThink()
