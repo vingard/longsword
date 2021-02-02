@@ -850,11 +850,11 @@ local GetConVar = GetConVar
 local LocalPlayer = LocalPlayer
 function SWEP:DrawHUD()
 	local debugMode = GetConVar("longsword_debug")
-	local dev = GetConVar("developer"):GetInt()
 
 	if (impulse_DevHud or debugMode:GetBool()) then
 		local scrW = ScrW()
 		local scrH = ScrH()
+		local dev = GetConVar("developer"):GetInt()
 
 		if dev == 0 then
 			print("[longsword] Enabling 'developer 1'")
