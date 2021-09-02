@@ -61,6 +61,9 @@ SWEP.Spread.VelocityMod = 0.5
 SWEP.IronsightsPos = Vector( -5.9613, -3.3101, 2.706 )
 SWEP.IronsightsAng = Angle( 0, 0, 0 )
 SWEP.IronsightsFOV = 0.8
+SWEP.IronsightsRecoilYawTarget = 0
+SWEP.IronsightsRecoilYawMax = 4
+SWEP.IronsightsRecoilYawMin = 1
 SWEP.IronsightsSensitivity = 0.8
 SWEP.IronsightsCrosshair = false
 SWEP.UseIronsightsRecoil = true
@@ -163,11 +166,18 @@ function SWEP:ShootBullet(damage, num_bullets, aimcone)
 	self:ShootEffects()
 end
 
+randomNegative = function()
+	return math.random(0,1) > 0.5 and -1 or 1
+end
+
 function SWEP:ShootEffects()
 	if not self:GetIronsights() or not self.UseIronsightsRecoil then
 		self:PlayAnim(ACT_VM_PRIMARYATTACK)
 		self:QueueIdle()
 	else
+		self.IronsightsRecoilYawTarget = math.random(self.IronsightsRecoilYawMin, self.IronsightsRecoilYawMax) * randomNegative()
+		--self:PlayAnim(ACT_VM_PRIMARYATTACK)
+		self:QueueIdle()
 		self:SetIronsightsRecoil( math.Clamp( 7.5 * (self.IronsightsRecoilVisualMultiplier or 1) * self.Primary.Recoil, 0, 20 ) )
 	end
 
@@ -554,8 +564,18 @@ function SWEP:GetOffset()
 		return self.LoweredPos, self.LoweredAng
 	end
 
+	local pos = Vector()
+	pos.x = self.IronsightsRecoilYawTarget*-(self:GetIronsightsRecoil()/12)
+	pos.y = -self:GetIronsightsRecoil() * 0.8
+	pos.z = -(self:GetIronsightsRecoil()/10)
+
+	local ang = Angle()
+	ang.p = self:GetIronsightsRecoil() * 1.2
+	ang.y = self.IronsightsRecoilYawTarget*-(self:GetIronsightsRecoil()/3)-- -(self:GetIronsightsRecoil()/6)
+	ang.r = 0
+
 	if self:GetIronsights() then
-		return self.IronsightsPos + Vector( 0, -self:GetIronsightsRecoil(), 0 ), self.IronsightsAng
+		return self.IronsightsPos + pos, self.IronsightsAng + ang
 	end
 end
 
