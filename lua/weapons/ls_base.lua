@@ -64,9 +64,11 @@ SWEP.IronsightsFOV = 0.8
 SWEP.IronsightsRecoilYawTarget = 0
 SWEP.IronsightsRecoilYawMax = 4
 SWEP.IronsightsRecoilYawMin = 1
+SWEP.IronsightsRecoilPitchMultiplier = 1.25
 SWEP.IronsightsSensitivity = 0.8
 SWEP.IronsightsCrosshair = false
 SWEP.UseIronsightsRecoil = true
+
 SWEP.scopedIn = SWEP.scopedIn or false
 
 function SWEP:SetupDataTables()
@@ -201,6 +203,8 @@ function SWEP:ShootEffects()
 				util.Effect(self.IronsightsMuzzleFlash or "CS_MuzzleFlash", ef)
 			end
 		end
+
+		hook.Run("longswordShootEffect")
 	end
 
 	self.Owner:MuzzleFlash()
@@ -567,10 +571,10 @@ function SWEP:GetOffset()
 	local pos = Vector()
 	pos.x = self.IronsightsRecoilYawTarget*-(self:GetIronsightsRecoil()/12)
 	pos.y = -self:GetIronsightsRecoil() * 0.8
-	pos.z = -(self:GetIronsightsRecoil()/10)
+	pos.z = -(self:GetIronsightsRecoil()/(self.IronsightsRecoilPitchMultiplier*10))
 
 	local ang = Angle()
-	ang.p = self:GetIronsightsRecoil() * 1.2
+	ang.p = self:GetIronsightsRecoil() * self.IronsightsRecoilPitchMultiplier
 	ang.y = self.IronsightsRecoilYawTarget*-(self:GetIronsightsRecoil()/3)-- -(self:GetIronsightsRecoil()/6)
 	ang.r = 0
 
@@ -745,9 +749,11 @@ function SWEP:GetViewModelPosition( pos, ang )
 	ang:RotateAroundAxis( ang:Up(), self.ViewModelAngle.y )
 	ang:RotateAroundAxis( ang:Forward(), self.ViewModelAngle.r )
 
-	pos = pos + self.ViewModelPos.x * ang:Right()
-	pos = pos + self.ViewModelPos.y * ang:Forward()
-	pos = pos + self.ViewModelPos.z * ang:Up()
+	local refPos = self.ViewModelPos - (ang:Forward()*0)
+
+	pos = pos + refPos.x * ang:Right()
+	pos = pos + refPos.y * ang:Forward()
+	pos = pos + refPos.z * ang:Up()
 
 	local predicted = IsFirstTimePredicted()
 	local ft = FrameTime()
