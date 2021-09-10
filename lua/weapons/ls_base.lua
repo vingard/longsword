@@ -62,8 +62,8 @@ SWEP.IronsightsPos = Vector( -5.9613, -3.3101, 2.706 )
 SWEP.IronsightsAng = Angle( 0, 0, 0 )
 SWEP.IronsightsFOV = 0.8
 SWEP.IronsightsRecoilYawTarget = 0
-SWEP.IronsightsRecoilYawMax = 4
-SWEP.IronsightsRecoilYawMin = 1
+SWEP.IronsightsRecoilYawMax = 1
+SWEP.IronsightsRecoilYawMin = 0.2
 SWEP.IronsightsRecoilPitchMultiplier = 1.25
 SWEP.IronsightsSensitivity = 0.8
 SWEP.IronsightsCrosshair = false
@@ -177,7 +177,7 @@ function SWEP:ShootEffects()
 		self:PlayAnim(ACT_VM_PRIMARYATTACK)
 		self:QueueIdle()
 	else
-		self.IronsightsRecoilYawTarget = math.random(self.IronsightsRecoilYawMin, self.IronsightsRecoilYawMax) * randomNegative()
+		self.IronsightsRecoilYawTarget = math.Rand(self.IronsightsRecoilYawMin, self.IronsightsRecoilYawMax) * randomNegative()
 		--self:PlayAnim(ACT_VM_PRIMARYATTACK)
 		self:QueueIdle()
 		self:SetIronsightsRecoil( math.Clamp( 7.5 * (self.IronsightsRecoilVisualMultiplier or 1) * self.Primary.Recoil, 0, 20 ) )
@@ -569,13 +569,14 @@ function SWEP:GetOffset()
 	end
 
 	local pos = Vector()
-	pos.x = self.IronsightsRecoilYawTarget*-(self:GetIronsightsRecoil()/12)
-	pos.y = -self:GetIronsightsRecoil() * 0.8
-	pos.z = -(self:GetIronsightsRecoil()/(self.IronsightsRecoilPitchMultiplier*10))
+	local current_recoil = self:GetIronsightsRecoil()
+	pos.x = self.IronsightsRecoilYawTarget*-(current_recoil/12)
+	pos.y = -current_recoil * 0.8
+	pos.z = ( current_recoil *self.IronsightsRecoilPitchMultiplier)/-3
 
 	local ang = Angle()
-	ang.p = self:GetIronsightsRecoil() * self.IronsightsRecoilPitchMultiplier
-	ang.y = self.IronsightsRecoilYawTarget*-(self:GetIronsightsRecoil()/3)-- -(self:GetIronsightsRecoil()/6)
+	ang.p = current_recoil * self.IronsightsRecoilPitchMultiplier
+	ang.y = self.IronsightsRecoilYawTarget*-(current_recoil)-- -(self:GetIronsightsRecoil()/6)
 	ang.r = 0
 
 	if self:GetIronsights() then
@@ -922,6 +923,9 @@ function SWEP:DrawHUD()
 
 		surface.SetTextPos((scrW / 2) + 30, (scrH / 2) + 130)
 		surface.DrawText("Is Reloading: "..tostring(self:GetReloading()))
+
+		surface.SetTextPos((scrW / 2) + 30, (scrH / 2) + 170)
+		surface.DrawText("Recoil Yaw Target: "..tostring(self.IronsightsRecoilYawTarget))
 
 		local ns = (self:GetNextPrimaryFire() or 0) - CurTime()
 		surface.SetTextPos((scrW / 2) + 30, (scrH / 2) + 150)
