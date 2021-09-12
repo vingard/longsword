@@ -454,6 +454,8 @@ function SWEP:Reload()
 
 	self:SetReloading( true )
 	self:SetReloadTime( CurTime() + self.Owner:GetViewModel():SequenceDuration() )
+
+	hook.Run("LongswordWeaponReload", self.Owner, self)
 end
 
 function SWEP:ReloadThink()

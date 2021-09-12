@@ -15,6 +15,8 @@ function SWEP:Reload()
 	if self.ReloadSound then
 		self:EmitSound(self.ReloadSound)
 	end
+
+	hook.Run("LongswordWeaponReload", self.Owner, self)
 end
 
 function SWEP:InsertShell()
