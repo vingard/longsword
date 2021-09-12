@@ -61,6 +61,7 @@ SWEP.Spread.VelocityMod = 0.5
 SWEP.IronsightsPos = Vector( -5.9613, -3.3101, 2.706 )
 SWEP.IronsightsAng = Angle( 0, 0, 0 )
 SWEP.IronsightsFOV = 0.8
+SWEP.IronsightsRecoilRecoveryRate = 1
 SWEP.IronsightsRecoilYawTarget = 0
 SWEP.IronsightsRecoilYawMax = 1
 SWEP.IronsightsRecoilYawMin = 0.2
@@ -190,7 +191,6 @@ function SWEP:ShootEffects()
 			local vm = self.Owner:GetViewModel()
 			local attachment = vm:LookupAttachment("muzzle")
 			local posang = vm:GetAttachment(attachment)
-
 			if posang then
 				local ef = EffectData()
 				ef:SetOrigin(self.Owner:GetShootPos())
@@ -203,8 +203,6 @@ function SWEP:ShootEffects()
 				util.Effect(self.IronsightsMuzzleFlash or "CS_MuzzleFlash", ef)
 			end
 		end
-
-		hook.Run("longswordShootEffect")
 	end
 
 	self.Owner:MuzzleFlash()
@@ -212,7 +210,7 @@ function SWEP:ShootEffects()
 	self.Owner:SetAnimation(PLAYER_ATTACK1)
 
 	if self.CustomShootEffects then
-		self.CustomShootEffects()
+		self.CustomShootEffects( self )
 	end
 end
 
@@ -412,7 +410,7 @@ function SWEP:CanIronsight()
 end
 
 function SWEP:IronsightsThink()
-	self:SetIronsightsRecoil( math.Approach( self:GetIronsightsRecoil(), 0, FrameTime() * 100 ) )
+	self:SetIronsightsRecoil( math.Approach( self:GetIronsightsRecoil(), 0, FrameTime() * (self.IronsightsRecoilRecoveryRate * 100) ) )
 
 	self.BobScale = self:GetIronsights() and 0.1 or 1
 	self.SwayScae = self:GetIronsights() and 0.1 or 1
