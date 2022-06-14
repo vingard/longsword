@@ -46,7 +46,7 @@ function SWEP:PrimaryAttack()
 			if self.Owner:HasInventoryItemSpecific(self.PairedItem) then
 				self.Owner:TakeInventoryItem(self.PairedItem)
 			end
-		else
+		elseif not self.DontRemoveOneEmpty then
 			self.Owner:StripWeapon(self:GetClass())
 		end
 	end
