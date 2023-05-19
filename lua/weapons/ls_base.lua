@@ -61,9 +61,15 @@ SWEP.Spread.VelocityMod = 0.5
 SWEP.IronsightsPos = Vector( -5.9613, -3.3101, 2.706 )
 SWEP.IronsightsAng = Angle( 0, 0, 0 )
 SWEP.IronsightsFOV = 0.8
+SWEP.IronsightsRecoilRecoveryRate = 1
+SWEP.IronsightsRecoilYawTarget = 0
+SWEP.IronsightsRecoilYawMax = 1
+SWEP.IronsightsRecoilYawMin = 0.2
+SWEP.IronsightsRecoilPitchMultiplier = 1.25
 SWEP.IronsightsSensitivity = 0.8
 SWEP.IronsightsCrosshair = false
 SWEP.UseIronsightsRecoil = true
+
 SWEP.scopedIn = SWEP.scopedIn or false
 
 function SWEP:SetupDataTables()
@@ -163,11 +169,18 @@ function SWEP:ShootBullet(damage, num_bullets, aimcone)
 	self:ShootEffects()
 end
 
+randomNegative = function()
+	return math.random(0,1) > 0.5 and -1 or 1
+end
+
 function SWEP:ShootEffects()
 	if not self:GetIronsights() or not self.UseIronsightsRecoil then
 		self:PlayAnim(ACT_VM_PRIMARYATTACK)
 		self:QueueIdle()
 	else
+		self.IronsightsRecoilYawTarget = math.Rand(self.IronsightsRecoilYawMin, self.IronsightsRecoilYawMax) * randomNegative()
+		--self:PlayAnim(ACT_VM_PRIMARYATTACK)
+		self:QueueIdle()
 		self:SetIronsightsRecoil( math.Clamp( 7.5 * (self.IronsightsRecoilVisualMultiplier or 1) * self.Primary.Recoil, 0, 20 ) )
 	end
 
@@ -178,7 +191,6 @@ function SWEP:ShootEffects()
 			local vm = self.Owner:GetViewModel()
 			local attachment = vm:LookupAttachment("muzzle")
 			local posang = vm:GetAttachment(attachment)
-
 			if posang then
 				local ef = EffectData()
 				ef:SetOrigin(self.Owner:GetShootPos())
@@ -198,7 +210,7 @@ function SWEP:ShootEffects()
 	self.Owner:SetAnimation(PLAYER_ATTACK1)
 
 	if self.CustomShootEffects then
-		self.CustomShootEffects()
+		self.CustomShootEffects( self )
 	end
 end
 
@@ -398,7 +410,7 @@ function SWEP:CanIronsight()
 end
 
 function SWEP:IronsightsThink()
-	self:SetIronsightsRecoil( math.Approach( self:GetIronsightsRecoil(), 0, FrameTime() * 100 ) )
+	self:SetIronsightsRecoil( math.Approach( self:GetIronsightsRecoil(), 0, FrameTime() * (self.IronsightsRecoilRecoveryRate * 100) ) )
 
 	self.BobScale = self:GetIronsights() and 0.1 or 1
 	self.SwayScae = self:GetIronsights() and 0.1 or 1
@@ -556,8 +568,19 @@ function SWEP:GetOffset()
 		return self.LoweredPos, self.LoweredAng
 	end
 
+	local pos = Vector()
+	local current_recoil = self:GetIronsightsRecoil()
+	pos.x = self.IronsightsRecoilYawTarget*-(current_recoil/12)
+	pos.y = -current_recoil * 0.8
+	pos.z = ( current_recoil *self.IronsightsRecoilPitchMultiplier)/-3
+
+	local ang = Angle()
+	ang.p = current_recoil * self.IronsightsRecoilPitchMultiplier
+	ang.y = self.IronsightsRecoilYawTarget*-(current_recoil)-- -(self:GetIronsightsRecoil()/6)
+	ang.r = 0
+
 	if self:GetIronsights() then
-		return self.IronsightsPos + Vector( 0, -self:GetIronsightsRecoil(), 0 ), self.IronsightsAng
+		return self.IronsightsPos + pos, self.IronsightsAng + ang
 	end
 end
 
@@ -727,9 +750,11 @@ function SWEP:GetViewModelPosition( pos, ang )
 	ang:RotateAroundAxis( ang:Up(), self.ViewModelAngle.y )
 	ang:RotateAroundAxis( ang:Forward(), self.ViewModelAngle.r )
 
-	pos = pos + self.ViewModelPos.x * ang:Right()
-	pos = pos + self.ViewModelPos.y * ang:Forward()
-	pos = pos + self.ViewModelPos.z * ang:Up()
+	local refPos = self.ViewModelPos - (ang:Forward()*0)
+
+	pos = pos + refPos.x * ang:Right()
+	pos = pos + refPos.y * ang:Forward()
+	pos = pos + refPos.z * ang:Up()
 
 	local predicted = IsFirstTimePredicted()
 	local ft = FrameTime()
@@ -898,6 +923,9 @@ function SWEP:DrawHUD()
 
 		surface.SetTextPos((scrW / 2) + 30, (scrH / 2) + 130)
 		surface.DrawText("Is Reloading: "..tostring(self:GetReloading()))
+
+		surface.SetTextPos((scrW / 2) + 30, (scrH / 2) + 170)
+		surface.DrawText("Recoil Yaw Target: "..tostring(self.IronsightsRecoilYawTarget))
 
 		local ns = (self:GetNextPrimaryFire() or 0) - CurTime()
 		surface.SetTextPos((scrW / 2) + 30, (scrH / 2) + 150)
